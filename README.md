@@ -8,7 +8,7 @@
 
 A intenção é desenvolver uma classe que crie altomaticamente os campos e as configuracoes de um formulario.
 
-### Como que funciona?
+### Como funciona?
 Um array contendo os nomes dos campos do formulario recebe o o metodo [index] com as propriedades do campo,
 Depois este array eh passado para a metodo formulario. 
 
