@@ -14,7 +14,7 @@ Depois este array eh passado para a metodo formulario.
 
 
 ### Configuracão.
-Incluir o qrquivo wgform.class.php
+Incluir o arquivo wgform.class.php
 ```php
 include "wgform.class.php";
 ```
