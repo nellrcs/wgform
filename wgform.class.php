@@ -231,7 +231,7 @@ class WGform
 	public static function oculto($valores_campo)
 	{
 		/* OCULTO */
-		$html .= '<input ';
+		$html = '<input ';
 		$html .= 'type="hidden" ';
 		$html .= $valores_campo->campo ? 'name="'.$valores_campo->campo.'" ' : '';
 		$html .= $valores_campo->id ? 'id="'.$valores_campo->id.'" ' : '';
