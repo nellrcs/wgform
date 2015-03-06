@@ -2,6 +2,7 @@
 /**
 * Objetivo unificar a criacao de formularios.
 * author @warllencs
+* ver 1.0.1
 */
 
 class obj_data
@@ -112,12 +113,16 @@ class WGform
 		return $label;
 	}
 
-	public static function input($valores_campo)
+	public static function input($valores_campo,$type = null)
 	{
 		/* INPUT */
 		$html = $valores_campo->html_antes ? $valores_campo->html_antes: '';
 		$html .= '<input ';
-		$html .= 'type="text" ';
+		if($type):
+			$html .= 'type="'.$type.'" ';
+		else:	
+			$html .= 'type="text" ';
+		endif;
 		$html .= $valores_campo->campo ? 'name="'.$valores_campo->campo.'" ' : '';
 		$html .= $valores_campo->css_class ? 'class="'.$valores_campo->css_class.'" ' : '';
 		$html .= $valores_campo->id ? 'id="'.$valores_campo->id.'" ' : '';
@@ -332,6 +337,10 @@ class WGform
 
 			case '6':
 				return self::arquivo($obj);
+			break;
+
+			case '7':
+				return self::input($obj,'password');
 			break;
 
 			default:
