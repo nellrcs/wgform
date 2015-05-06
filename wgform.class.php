@@ -1,8 +1,8 @@
-<?php 
+<?php
 /**
 * Objetivo unificar a criacao de formularios.
 * author @warllencs
-* ver 1.0.1
+* ver 1.0.1.1
 */
 
 class obj_data
@@ -16,13 +16,14 @@ class obj_data
 	public $placeholder = true;
 	public $id = null;
 	public $obrigatorio = false;
-	public $label = false;
-	public $html_antes = null;
-	public $html_depois = null;
+	public $label = true;
+	public $html_antes = false;
+	public $html_depois = "</br>";
 	public $mascara = '';
+	public $editor = false;
 }
 
-class WGform 
+class WGform
 {
 
 	public static $nome = null;
@@ -33,19 +34,20 @@ class WGform
 	public static $prefixo = 'WG';
 	public static $ajax = false;
 	public static $campos_mascara = array();
+	public static $campos_editor = array();
 
-	function index($valor = array())
+	public static function index($valor = array())
 	{
-		$verdadeiro = new obj_data();	
+		$verdadeiro = new obj_data();
 
 		if(!empty($valor)):
 			foreach ($valor as $chave => $valor){
 				if(property_exists($verdadeiro,$chave)):
-					$verdadeiro->$chave = $valor;  	
-				endif;	
+					$verdadeiro->$chave = $valor;
+				endif;
 			}
 			if(empty($verdadeiro->campo)):
-				$verdadeiro->campo = self::$prefixo.uniqid();	
+				$verdadeiro->campo = self::$prefixo.uniqid();
 			endif;
 
 			if(empty($verdadeiro->titulo)):
@@ -58,13 +60,17 @@ class WGform
 
 			if(!empty($verdadeiro->mascara)):
 				self::$campos_mascara[$verdadeiro->id] = $verdadeiro->mascara;
-			endif;	
+			endif;
+
+			if($verdadeiro->editor):
+				self::$campos_editor[] = $verdadeiro->id;
+			endif;
 
 			return $verdadeiro;
 		else:
 			return false;
-		endif;	
-		
+		endif;
+
 	}
 
 	public static function formulario($obj)
@@ -74,7 +80,7 @@ class WGform
 		{
 			if(!empty($v)):
 				$html .= self::add($v->tipo,$v);
-			endif;		
+			endif;
 		}
 
 		if(!empty(self::$nome)):
@@ -88,12 +94,16 @@ class WGform
 			$form .= self::$html_botao ? self::$html_botao : "<input type='submit'>";
 			$form .= "</form>";
 			$html = $form;
-		endif;	
+		endif;
 
 		$ar_scripts = array();
 
 		if(!empty(self::$campos_mascara)):
 			$ar_scripts[] = self::mascara(self::$campos_mascara);
+		endif;
+
+		if(!empty(self::$campos_editor)):
+			$ar_scripts[] = self::editor(self::$campos_editor);
 		endif;
 
 		if(!empty(self::$ajax)):
@@ -102,9 +112,9 @@ class WGform
 
 		if(!empty($ar_scripts)):
 			$html .= self::scripts($ar_scripts);
-		endif;	
+		endif;
 
-		return $html; 
+		return $html;
 	}
 
 	public static function label($nome,$for)
@@ -120,7 +130,7 @@ class WGform
 		$html .= '<input ';
 		if($type):
 			$html .= 'type="'.$type.'" ';
-		else:	
+		else:
 			$html .= 'type="text" ';
 		endif;
 		$html .= $valores_campo->campo ? 'name="'.$valores_campo->campo.'" ' : '';
@@ -129,15 +139,15 @@ class WGform
 		$html .= $valores_campo->valor ? 'value="'.$valores_campo->valor.'" ' : '';
 		$html .= $valores_campo->obrigatorio ?  'required ' : '';
 		if($valores_campo->placeholder):
-			$html .=  $valores_campo->titulo ? ' placeholder="'.$valores_campo->titulo.'" ' : '';	
+			$html .=  $valores_campo->titulo ? ' placeholder="'.$valores_campo->titulo.'" ' : '';
 		endif;
 
 		$html .= '/>';
 		if($valores_campo->label):
 			$temp = $html;
-			$html = self::label($valores_campo->titulo,$valores_campo->id).$temp;	
-		endif;	
-		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';		
+			$html = self::label($valores_campo->titulo,$valores_campo->id).$temp;
+		endif;
+		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';
 		return $html;
 	}
 
@@ -150,7 +160,7 @@ class WGform
 		$html .= $valores_campo->id ? 'id="'.$valores_campo->id.'" ' : '';
 		$html .= $valores_campo->campo ? 'name="'.$valores_campo->campo.'" ' : '';
 		if($valores_campo->placeholder):
-			$html .=  $valores_campo->titulo ? ' placeholder="'.$valores_campo->titulo.'" ' : '';	
+			$html .=  $valores_campo->titulo ? ' placeholder="'.$valores_campo->titulo.'" ' : '';
 		endif;
 		$html .= '>';
 		$html .= $valores_campo->valor ?  $valores_campo->valor : '';
@@ -159,7 +169,7 @@ class WGform
 			$temp = $html;
 			$html = self::label($valores_campo->titulo,$valores_campo->id).$temp;
 		endif;
-		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';			
+		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';
 		return $html;
 	}
 
@@ -180,21 +190,21 @@ class WGform
 				else:
 					$html .= '<option value="'.$c.'">'.$v.'</option> ';
 				endif;
-			}	
+			}
 		endif;
-		$html .= '</select> ';	
+		$html .= '</select> ';
 		if($valores_campo->label):
 			$temp = $html;
 			$html = self::label($valores_campo->titulo,$valores_campo->id).$temp;
 		endif;
-		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';						
+		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';
 		return $html;
 	}
 
 	public static function radio($valores_campo)
 	{
 		/* RADIO */
-		$html = $valores_campo->html_antes ? $valores_campo->html_antes: '';	
+		$html = $valores_campo->html_antes ? $valores_campo->html_antes: '';
 		$html .= '<input ';
 		if($valores_campo->campo == '@'):
 			$b = str_replace("@", "", $valores_campo->campo);
@@ -210,8 +220,8 @@ class WGform
 		if($valores_campo->label):
 			$temp = $html;
 			$html = self::label($valores_campo->titulo,$valores_campo->id).$temp;
-		endif;	
-		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';	
+		endif;
+		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';
 		return $html;
 	}
 
@@ -228,8 +238,8 @@ class WGform
 		if($valores_campo->label):
 			$temp = $html;
 			$html = self::label($valores_campo->titulo,$valores_campo->id).$temp;
-		endif;	
-		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';	
+		endif;
+		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';
 		return $html;
 	}
 
@@ -241,7 +251,7 @@ class WGform
 		$html .= $valores_campo->campo ? 'name="'.$valores_campo->campo.'" ' : '';
 		$html .= $valores_campo->id ? 'id="'.$valores_campo->id.'" ' : '';
 		$html .= $valores_campo->valor ? 'value="'.$valores_campo->valor.'" ' : '';
-		$html .= '/>';	
+		$html .= '/>';
 		return $html;
 	}
 
@@ -253,34 +263,43 @@ class WGform
 		$html .= $valores_campo->campo ? 'name="'.$valores_campo->campo.'" ' : '';
 		$html .= $valores_campo->id ? 'id="'.$valores_campo->id.'" ' : '';
 		$html .= $valores_campo->valor ? 'value="'.$valores_campo->valor.'" ' : '';
-		$html .= 'type="file"> ';	
+		$html .= 'type="file"> ';
 		if($valores_campo->label):
 			$temp = $html;
 			$html = self::label($valores_campo->titulo,$valores_campo->id).$temp;
-		endif;	
-		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';	
+		endif;
+		$html .= $valores_campo->html_depois ? $valores_campo->html_depois: '';
 		return $html;
-	}	
-
-
+	}
 
 
 	public static function scripts($trechos = array())
 	{
 		$html = '<script type="text/javascript">';
 		foreach ($trechos as $trecho) {
-			$html .= $trecho; 
+			$html .= $trecho;
 		}
 		$html .= '</script>';
 		return $html;
 	}
-	
+
 	public static function mascara($id_campos)
 	{
 		$html = "";
 		foreach($id_campos as $c => $v)
 		{
 			$html .= '$("#'.$c.'").mask("'.$v.'");';
+		}
+		return $html;
+	}
+
+
+	public static function editor($id_campos)
+	{
+		$html = "";
+		foreach($id_campos as $v)
+		{
+			$html .= "CKEDITOR.replace('".$v."');";
 		}
 		return $html;
 	}
@@ -300,9 +319,13 @@ class WGform
 
 		if(!empty($id_formaulario)):
 			$id_form = "#".$id_formaulario;
-			$html = '$(document).ready(function(){$("'.$id_form.'").on("submit",function(t){t.preventDefault();var a=$(this).attr("action"),e=$(this).attr("method");$.ajax({url:a,type:e,data:new FormData(this),contentType:!1,cache:!1,processData:!1,'.$eventos.'})})});';
+
+
+			$ckeditor = 'for(instance in CKEDITOR.instances ){CKEDITOR.instances[instance].updateElement()};';
+			$html = '$(document).ready(function(){$("'.$id_form.'").on("submit",function(t){t.preventDefault();'.$ckeditor.'var a=$(this).attr("action"),e=$(this).attr("method");$.ajax({url:a,type:e,data:new FormData(this),contentType:!1,cache:!1,processData:!1,'.$eventos.'})})});';
 			return $html;
-		else:		
+
+		else:
 			return false;
 		endif;
 
@@ -314,18 +337,18 @@ class WGform
 			case '0':
 				return self::input($obj);
 			break;
-			
+
 			case '1':
 				return self::textarea($obj);
 			break;
 
 			case '2':
 				return self::select($obj);
-			break;			
+			break;
 
 			case '3':
 				return self::radio($obj);
-			break;			
+			break;
 
 			case '4':
 				return self::checkbox($obj);
@@ -341,6 +364,14 @@ class WGform
 
 			case '7':
 				return self::input($obj,'password');
+			break;
+
+			case '8':
+				return self::input($obj,'email');
+			break;
+
+			case '9':
+				return self::input($obj,'number');
 			break;
 
 			default:
